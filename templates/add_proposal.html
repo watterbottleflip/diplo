@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Регистрация на турнир</title>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/index_style.css') }}">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+<body onLoad="onLoadFunctions()">
+	<div id="wrapper">
+		<div id = "login-block-wrapper">
+			<h1 style="color: white; text-align: center;">Регистрация на {{ tournament_name }}</h1>
+			<form action="" method="post">
+				{{ form.hidden_tag() }}
+				{{ form.team_name.label }}<br>
+				{{ form.team_name(class = "reg-input", type = "text") }}<br>
+				{% for error in form.team_name.errors %}
+                <p class="alert alert-danger" role="alert">
+                    {{ error }}
+                </p>
+            	{% endfor %}
+					{% for participant in form.participants %}
+					<div id = "participants">
+						<div class="block" style="width: 60%; margin-top: 2%; marin-bottom: 1%; padding: 1%;">
+							{{ participant.username.label }}
+							{{ participant.username(class = "reg-input", type = "text")}}<br>
+							{% for error in participant.username.errors %}
+                				<p class="alert alert-danger" role="alert">
+                    			{{ error }}
+                				</p>
+            				{% endfor %}
+							{{ participant.fullname.label }}
+							{{ participant.fullname(class = "reg-input", type = "text")}}<br>
+							{% for error in participant.fullname.errors %}
+                				<p class="alert alert-danger" role="alert">
+                    			{{ error }}
+                				</p>
+            				{% endfor %}
+							{{ participant.gender.label }}
+							{{ participant.gender(class = "reg-input", type = "text") }}<br>
+							{% for error in participant.gender.errors %}
+                				<p class="alert alert-danger" role="alert">
+                    			{{ error }}
+                				</p>
+            				{% endfor %}
+							{{ participant.birth_date.label  }}<br>
+							{{ participant.birth_date(class="reg-input", type="date", style = "width : 20%") }}<br><br>
+							{% for error in participant.birth_date.errors %}
+                				<p class="alert alert-danger" role="alert">
+                    			{{ error }}
+                				</p>
+            				{% endfor %}
+							{{ participant.gto.label }}
+							{{ participant.gto(class = "reg-input", type = "text") }}<br>
+							{% for error in participant.gto.errors %}
+                				<p class="alert alert-danger" role="alert">
+                    			{{ error }}
+                				</p>
+            				{% endfor %}
+							{{ participant.contact.label }}
+							{{ participant.contact(class = "reg-input", type = "text") }}
+							{% for error in participant.contact.errors %}
+                				<p class="alert alert-danger" role="alert">
+                    			{{ error }}
+                				</p>
+            				{% endfor %}
+
+						</div>
+					{% endfor %}
+					</div>
+				{{ form.submit }}
+			</form>
+		</div>
+	</div>
+</body>
+</html>

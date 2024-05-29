@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Редактирование турнира</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/index_style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style type="text/css">
+        .reg-input {
+            margin-top: 1%;
+            margin-bottom: 1%;
+        }
+    </style>
+</head>
+<body>
+    <div id="wrapper">
+        <div id="login-block-wrapper">
+            <h1 style="color: white; text-align: center;">Редактирование турнира</h1>
+            <form action="" method="post">
+                {{ form.hidden_tag() }}
+                <label>Название турнира</label><br>
+                {{ form.name(class="reg-input", type="text") }}<br>
+                {% for error in form.name.errors %}
+                    <p class="alert alert-danger" role="alert">{{ error }}</p>
+                {% endfor %}
+                <label>Название игры</label><br>
+                {{ form.discipline(class="reg-input", type="text") }}<br>
+                {% for error in form.discipline.errors %}
+                    <p class="alert alert-danger" role="alert">{{ error }}</p>
+                {% endfor %}
+                <label>Место проведения</label><br>
+                {{ form.place(class="reg-input", type="text") }}<br>
+                {% for error in form.place.errors %}
+                    <p class="alert alert-danger" role="alert">{{ error }}</p>
+                {% endfor %}
+                <label>Организатор</label><br>
+                {{ form.organizer(class="reg-input", type="text") }}<br>
+                {% for error in form.organizer.errors %}
+                    <p class="alert alert-danger" role="alert">{{ error }}</p>
+                {% endfor %}
+                <label>Открытие турнира</label><br>
+                {{ form.registration_time(class="reg-input", type="date", style="width: 10%;") }}
+                {% for error in form.registration_time.errors %}
+                    <p class="alert alert-danger" role="alert">{{ error }}</p>
+                {% endfor %}
+                <input class="reg-input" type="time" name="time-open" style="width: auto;"><br>
+                <label>Начало турнира</label><br>
+                {{ form.start_time(class="reg-input", type="date", style="width: 10%;") }}
+                {% for error in form.start_time.errors %}
+                    <p class="alert alert-danger" role="alert">{{ error }}</p>
+                {% endfor %}
+                <input class="reg-input" type="time" name="time-start" style="width: auto;"><br>
+                <label>Окончание турнира</label><br>
+                {{ form.end_time(class="reg-input", type="date", style="width: 10%;") }}
+                {% for error in form.end_time.errors %}
+                    <p class="alert alert-danger" role="alert">{{ error }}</p>
+                {% endfor %}
+                <input class="reg-input" type="time" name="time-finish" style="width: auto;"><br>
+                <label>Закрытие турнира</label><br>
+                {{ form.closure_time(class="reg-input", type="date", style="width: 10%;") }}
+                {% for error in form.closure_time.errors %}
+                    <p class="alert alert-danger" role="alert">{{ error }}</p>
+                {% endfor %}
+                <input class="reg-input" type="time" name="time-close" style="width: auto;"><br>
+                <label>Размер команды</label><br>
+                {{ form.participants_amount(class="reg-input", type="text", style="width: 7%;") }}<br>
+                {% for error in form.participants_amount.errors %}
+                    <p class="alert alert-danger" role="alert">{{ error }}</p>
+                {% endfor %}
+                <label>Количество команд</label><br>
+                {{ form.teams_amount(class="reg-input", type="text", style="width: 7%;") }}<br>
+                {% for error in form.teams_amount.errors %}
+                    <p class="alert alert-danger" role="alert">{{ error }}</p>
+                {% endfor %}
+                {{ form.submit(class="btn btn-primary") }}
+            </form>
+        </div>
+    </div>
+</body>
+</html>
