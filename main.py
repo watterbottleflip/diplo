@@ -450,6 +450,6 @@ def tournament_page(tournament_id):
 
 
 if __name__ == "__main__":
-    db_session.global_init(db_file="postgres.db")
+    db_session.global_init(db_file="dbname.db")
     app.debug = True
     app.run()
