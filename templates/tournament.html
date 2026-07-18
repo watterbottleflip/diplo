@@ -70,27 +70,19 @@
 
         {% if tournament.grid %}
             <div class="block" style="margin-top: 22px; padding: 20px;">
-                <h3 style="margin-top: 0; text-align: center;">Турнирная сетка</h3>
-                <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; align-items: flex-start; margin-top: 16px;">
-                    {% for round_matches in tournament.grid %}
-                        <div style="min-width: 250px; flex: 1;">
-                            <div style="text-align: center; margin-bottom: 10px; color: #dfe7ff; font-weight: 700;">
-                                {% if loop.last %}
-                                    Финал
-                                {% else %}
-                                    Раунд {{ loop.index }}
-                                {% endif %}
-                            </div>
-                            {% for match in round_matches %}
-                                <div style="margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.16); border-radius: 12px; background: rgba(255,255,255,0.08); overflow: hidden;">
-                                    <div style="padding: 10px 12px; background: rgba(79,70,229,0.25); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #e0e7ff;">
-                                        Матч
-                                    </div>
-                                    <div style="padding: 10px 12px;">
-                                        <div style="padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: #f8fafc;">{{ match.left or '—' }}</div>
-                                        <div style="padding: 6px 0; color: #cbd5e1;">vs</div>
-                                        <div style="padding: 6px 0; color: #f8fafc;">{{ match.right or '—' }}</div>
-                                    </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+                    <h3 style="margin: 0;">Турнирная сетка</h3>
+                    <span style="padding: 8px 12px; border-radius: 999px; background: rgba(79,70,229,0.25); color: #c7d2fe; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Challonge-style</span>
+                </div>
+                <div class="bracket-board">
+                    {% for round in tournament.grid %}
+                        <div class="bracket-round">
+                            <div class="bracket-round-title">{{ round.name }}</div>
+                            {% for match in round.matches %}
+                                <div class="bracket-match">
+                                    <div class="bracket-match-label">{{ match.label }}</div>
+                                    <div class="bracket-player {% if match.left.name == 'BYE' %}bye{% endif %}">{{ match.left.name or '—' }}</div>
+                                    <div class="bracket-player {% if match.right.name == 'BYE' %}bye{% endif %}">{{ match.right.name or '—' }}</div>
                                 </div>
                             {% endfor %}
                         </div>

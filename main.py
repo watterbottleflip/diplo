@@ -1,6 +1,6 @@
 import json
 import os
-from flask import Flask, render_template, redirect, abort, flash
+from flask import Flask, render_template, redirect, abort, flash, request
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 import pandas as pd
 
@@ -580,6 +580,60 @@ def generate_grid(tournament_id):
     db_sess.commit()
     flash("Турнирная сетка успешно построена", "success")
     return redirect(f'/tournament/{tournament_id}')
+
+
+@app.route('/tournament/<int:tournament_id>/edit_grid', methods=['GET', 'POST'])
+@login_required
+def edit_grid(tournament_id):
+    if current_user.access_level == 0:
+        abort(403)
+
+    db_sess = db_session.create_session()
+    tournament = db_sess.query(Tournament).get(tournament_id)
+    if not tournament:
+        abort(404)
+
+    if request.method == 'POST':
+        rounds_data = []
+        round_names = []
+        for key in request.form:
+            if key.startswith('round_name_'):
+                round_names.append(request.form[key])
+
+        if not round_names:
+            round_names = [round_data.get('name') for round_data in grid_data] if 'grid_data' in locals() else []
+
+        for round_index, round_name in enumerate(round_names):
+            matches = []
+            match_index = 0
+            while True:
+                left_value = request.form.get(f'round_{round_index}_match_{match_index}_left')
+                right_value = request.form.get(f'round_{round_index}_match_{match_index}_right')
+                if left_value is None and right_value is None:
+                    break
+                matches.append({
+                    'label': f'Матч {match_index + 1}',
+                    'left': {'name': left_value or 'BYE', 'winner': None},
+                    'right': {'name': right_value or 'BYE', 'winner': None},
+                    'winner': None,
+                })
+                match_index += 1
+            rounds_data.append({'name': round_name, 'matches': matches})
+
+        tournament.update_grid_from_selection(rounds_data)
+        db_sess.commit()
+        flash("Сетка обновлена", "success")
+        return redirect(f'/tournament/{tournament_id}')
+
+    grid_data = []
+    if tournament.grid:
+        try:
+            grid_data = json.loads(tournament.grid or '{"grid": []}').get('grid', [])
+        except (TypeError, ValueError, json.JSONDecodeError):
+            grid_data = []
+
+    participants = build_bracket_participants(tournament_id, db_sess)
+    return render_template('edit_grid.html', tournament=tournament, rounds=grid_data, participants=participants)
 
 
 if __name__ == "__main__":

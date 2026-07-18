@@ -181,4 +181,62 @@ label { color: #e2e8f0; }
 ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 5px; }
 ::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
 
+.bracket-board {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.bracket-round {
+    min-width: 240px;
+    flex: 1;
+    max-width: 280px;
+}
+
+.bracket-round-title {
+    text-align: center;
+    margin-bottom: 10px;
+    color: #dbeafe;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 12px;
+}
+
+.bracket-match {
+    margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.86);
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.bracket-match-label {
+    padding: 8px 10px;
+    background: linear-gradient(90deg, #4f46e5, #7c3aed);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #e0e7ff;
+}
+
+.bracket-player {
+    padding: 10px 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    color: #f8fafc;
+    font-size: 14px;
+}
+
+.bracket-player:first-of-type {
+    border-top: 0;
+}
+
+.bracket-player.bye {
+    color: #94a3b8;
+    font-style: italic;
+}
+
 

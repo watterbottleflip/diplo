@@ -51,13 +51,6 @@
                     			{{ error }}
                 				</p>
             				{% endfor %}
-							{{ participant.gto.label }}
-							{{ participant.gto(class = "reg-input", type = "text") }}<br>
-							{% for error in participant.gto.errors %}
-                				<p class="alert alert-danger" role="alert">
-                    			{{ error }}
-                				</p>
-            				{% endfor %}
 							{{ participant.contact.label }}
 							{{ participant.contact(class = "reg-input", type = "text") }}
 							{% for error in participant.contact.errors %}

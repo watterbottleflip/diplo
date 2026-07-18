@@ -15,7 +15,6 @@ class Participant(SqlAlchemyBase, UserMixin, SerializerMixin):
     fullname = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     gender = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     birth_date = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    gto = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     contact = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
     @staticmethod
@@ -35,18 +34,16 @@ class Participant(SqlAlchemyBase, UserMixin, SerializerMixin):
         except ValueError:
             return text
 
-    def make_new(self, username, fullname, gender, birth_date, gto, contact):
+    def make_new(self, username, fullname, gender, birth_date, contact):
         self.username = username
         self.fullname = fullname
         self.gender = gender
         self.birth_date = self.normalize_birth_date(birth_date)
-        self.gto = gto
         self.contact = contact
 
-    def update(self, username, fullname, gender, birth_date, gto, contact):
+    def update(self, username, fullname, gender, birth_date, contact):
         self.username = username
         self.fullname = fullname
         self.gender = gender
         self.birth_date = self.normalize_birth_date(birth_date)
-        self.gto = gto
         self.contact = contact

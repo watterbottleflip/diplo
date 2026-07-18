@@ -1,8 +1,11 @@
 import datetime
+import json
+import math
+
 import sqlalchemy
 from flask_login import UserMixin
 from sqlalchemy_serializer import SerializerMixin
-import json
+
 from .db_session import SqlAlchemyBase
 
 
@@ -46,32 +49,75 @@ class Tournament(SqlAlchemyBase, UserMixin, SerializerMixin):
         normalized = []
         for participant in participants:
             if isinstance(participant, dict):
-                normalized.append(participant)
+                name = participant.get("name") or participant.get("team_name") or "Команда"
+                normalized.append({"name": name, "winner": None})
             else:
                 normalized.append({"name": participant, "winner": None})
 
         if len(normalized) % 2 != 0:
             normalized.append({"name": "BYE", "winner": None})
 
+        size = 1
+        while size < len(normalized):
+            size *= 2
+        while len(normalized) < size:
+            normalized.append({"name": "BYE", "winner": None})
+
         rounds = []
         current_round = list(normalized)
-        while len(current_round) > 1:
-            next_round = []
-            for i in range(0, len(current_round), 2):
-                left = current_round[i]
-                right = current_round[i + 1] if i + 1 < len(current_round) else None
-                next_round.append({
-                    "left": left.get("name") if isinstance(left, dict) else left,
-                    "right": right.get("name") if isinstance(right, dict) else right,
+        total_rounds = int(math.log2(len(current_round)))
+
+        for round_index in range(total_rounds):
+            matches = []
+            for match_index in range(0, len(current_round), 2):
+                left = current_round[match_index]
+                right = current_round[match_index + 1] if match_index + 1 < len(current_round) else {"name": "BYE", "winner": None}
+                matches.append({
+                    "label": f"Матч {match_index // 2 + 1}",
+                    "left": {"name": left.get("name") or "BYE", "winner": None},
+                    "right": {"name": right.get("name") or "BYE", "winner": None},
                     "winner": None,
                 })
-            rounds.append(next_round)
+
+            if round_index == total_rounds - 1:
+                round_name = "Финал"
+            else:
+                round_name = f"1/{2 ** (total_rounds - round_index)} финала"
+
+            rounds.append({
+                "name": round_name,
+                "matches": matches,
+            })
+
             current_round = [
-                {"name": match.get("left") if match.get("winner") is None else match.get("winner"), "winner": None}
-                for match in next_round
+                {"name": None, "winner": None}
+                for _ in range(len(matches))
             ]
+
         self.grid = json.dumps({"grid": rounds})
         return rounds
+
+    def update_grid_from_selection(self, rounds_data):
+        if not rounds_data:
+            return
+        normalized = []
+        for round_data in rounds_data:
+            matches = []
+            for match in round_data.get("matches", []):
+                left = match.get("left") or {}
+                right = match.get("right") or {}
+                matches.append({
+                    "label": match.get("label") or "Матч",
+                    "left": {"name": left.get("name") or "BYE", "winner": None},
+                    "right": {"name": right.get("name") or "BYE", "winner": None},
+                    "winner": None,
+                })
+            normalized.append({
+                "name": round_data.get("name") or "Раунд",
+                "matches": matches,
+            })
+        self.grid = json.dumps({"grid": normalized})
+        return normalized
 
     @property
     def get_start_date(self):

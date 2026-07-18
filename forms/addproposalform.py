@@ -12,8 +12,6 @@ class ParticipantForm(Form):
                            validators=[DataRequired(message="Поле 'ФИО' не может быть пустым")])
     gender = SelectField("Выберите пол данного игрока: ", choices=[("m", "Мужской"), ("w", "Женский")])
     birth_date = DateField('Введите дату рождения данного игрока')
-    gto = StringField('Введите номер ГТО этого игрока',
-                      validators=[DataRequired(message="Поле 'ГТО' не может быть пустым")])
     contact = StringField('Введите почту этого игрока',
                           validators=[DataRequired(message="Поле 'почта' не может быть пустым")])
 
