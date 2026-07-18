@@ -9,66 +9,81 @@
 
 	</script>
 </head>
-<body style = "background-image: linear-gradient(to left, darkslateblue, black 70%);">
-<h3 style="color: white; padding:1%; margin-left: 40%; align-items: center; display: flex">Добро пожаловать, {{ current_user.username }}!</h3>
-			<h2 style=" color: white; padding:0.5%; margin-left: 40%;">Желаем вам всего-всего!</h2>
-	<div id="wrapper">
-		<div style="height:5vh">
+<body style="background-image: linear-gradient(to left, darkslateblue, black 70%);">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 24px 20px 40px; color: white;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h2 style="margin: 0;">Добро пожаловать, {{ current_user.username }}!</h2>
+                <p style="margin: 6px 0 0; color: #d9d9d9;">Управляйте турнирами, заявками и сетками из одной панели.</p>
+            </div>
+            <div>
+                <a href="/add_tournament"><input id="guest-button" type="button" value="Провести турнир" style="background: #4f46e5; border-color: white;"></a>
+                <a href="/logout"><input id="guest-button" type="button" value="Выйти" style="background: transparent; border-color: white;"></a>
+            </div>
+        </div>
 
-		</div>
-		<div id="left" style="height:20px;">
-			<div id = login-block-wrapper style="float: right; width: 100%;">
-				<div class="block" style="background: darkslateblue; height: 450px;">
-					<h4 style="color: white; text-align: center;">Мои мероприятия</h4>
-					<div style="height: 80%; overflow-y: auto; margin:0; padding:0;">
-						{% if not is_empty_tournamnets %}
+        <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; align-items: start;">
+            <div style="background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); border-radius: 16px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4 style="margin: 0;">Мои мероприятия</h4>
+                    <a href="/" style="color: #dfe7ff; text-decoration: none;">На главную</a>
+                </div>
+                <div style="background: rgba(255,255,255,0.12); border-radius: 10px; padding: 10px; margin-bottom: 12px; color: white;">
+                    <b>Быстрый путь:</b> создайте турнир, подтвердите заявки и откройте страницу турнира, чтобы построить сетку.
+                </div>
 
-							{% for tournament in tournaments %}
-								<div class="block" style="margin-top: 10px; margin-right: 2%; height:150px; width: 98%;">
-								<div style="width: 79%; margin-right: 1%; padding:0; float:left; height:auto; border-right-width: 2px; border-right-color: black; border-right-style: solid;">
-									<h6 style="color: white; text-align: center;">{{ tournament["tournament_name"] }}</h6>
-									<i><b>{{ tournament["proposal_amount"] }}</b> / <b>{{ tournament["proposals_need"] }}</b> зарегистрированных команд</i><br>
-									<b>статус:</b>
-									<i>{{ tournament["tournament_status"]}}</i>
-								</div>
-								<div style="width:20%; margin:0; padding:0; float: left;">
-									<div style="margin-top:  15%; width:50%; height:20px; width: 100%; text-align: center; font-size: 10px; letter-spacing: 2px;"><b>{{ tournament["date"][2] }}</b></div>
-									<div style="width:50%; height:40px; width: 100%; text-align: center; font-size: 20px; letter-spacing: 2px;"><b>{{ tournament["date"][0] }} / {{ tournament["date"][1] }}</b></div>
-								</div>
-								</div>
-							{% endfor %}
-						{% endif %}
-					</div>
-					<a href = "/add_tournament"><input id = "guest-button" type="button" name="answer" value="Провести турнир" style="background: darkslateblue; border-color: white;"></a>
-				</div>
-				<a href = "/"><input id = "guest-button" type="button" name="answer" value="Вернуться на главную"></a>
-				<a href = "/logout"><input id = "guest-button" type="button" name="answer" value="Выйти"></a>
-			</div>
-		</div>
-		<div id="right" style="height:70vh; margin-bottom: 20vh">
-			<div id = login-block-wrapper style="float: right; width: 70%;">
-				<div class="block" style="background: darkslateblue; height: 450px;">
-					<h4 style="color: white; text-align: center;">Заявки на турниры</h4>
-					<div style="height: 80%; overflow-y: auto; margin:0; padding:0;">
-						{% if not is_empty_proposals %}
-							{% for proposal in proposals %}
-								<div class="block" style="margin-top: 10px; margin-right: 2%; height:120px; width: 98%;">
-									<div style=" padding:0; float:left; width: 100%;">
-										<h6 style="color: white; text-align: center;">{{ proposal["tournament_name"] }}</h6>
-										Команда:<b style="letter-spacing: 2px; font-size: 20px; text-transform: uppercase;">"{{ proposal["team_name"] }}"</b><br>
-									</div>
-									<div style="height:50px; width: 100%;">
-										<a href = '/approve_proposal/{{proposal["proposal_id"]}}'><input id = "guest-button" type="button" name="answer" value="Принять" style=" width: 40%; margin: 1%;float: left; display: inline;background: lightgreen; border-color: white;"></a>
-										<a href = '/delete_proposal/{{proposal["proposal_id"]}}'><input id = "guest-button" type="button" name="answer" value="Отклонить" style="width: 40%; margin: 1%; float: right; display: inline;background: orangered; border-color: white;"></a>
-									</div>
-								</div>
-							{% endfor %}
-						{% endif %}
-					</div>
-					<input id = "guest-button" type="button" name="answer" value="Принять всё" style="background: darkslateblue; border-color: white;">
-				</div>
-			</div>
-		</div>
-	</div>
+                {% if not is_empty_tournamnets %}
+                    <div style="display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 3px;">
+                        {% for tournament in tournaments %}
+                            <div style="background: rgba(7, 10, 30, 0.55); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px;">
+                                <div style="display: flex; justify-content: space-between; gap: 10px; align-items: start;">
+                                    <div>
+                                        <h6 style="margin: 0 0 6px; color: white;">{{ tournament["tournament_name"] }}</h6>
+                                        <div style="font-size: 13px; color: #d8d8d8;">
+                                            <b>{{ tournament["proposal_amount"] }}</b> / <b>{{ tournament["proposals_need"] }}</b> команд
+                                        </div>
+                                        <div style="font-size: 13px; color: #d8d8d8; margin-top: 4px;">{{ tournament["tournament_status"] }}</div>
+                                    </div>
+                                    <div style="text-align: right; min-width: 80px;">
+                                        <div style="font-size: 11px; letter-spacing: 1px; color: #cfcfcf;">{{ tournament["date"][2] }}</div>
+                                        <div style="font-size: 18px; font-weight: bold;">{{ tournament["date"][0] }} / {{ tournament["date"][1] }}</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <a href="/tournament/{{ tournament['tournament_name']|replace(' ', '-') }}" style="display: none;"></a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="padding: 20px; text-align: center; color: #d9d9d9;">Пока нет созданных турниров.</div>
+                {% endif %}
+            </div>
+
+            <div style="background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); border-radius: 16px; padding: 16px;">
+                <h4 style="margin: 0 0 10px;">Заявки на турниры</h4>
+                <div style="display: flex; flex-direction: column; gap: 10px; max-height: 460px; overflow-y: auto; padding-right: 3px;">
+                    {% if not is_empty_proposals %}
+                        {% for proposal in proposals %}
+                            <div style="background: rgba(7, 10, 30, 0.55); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px;">
+                                <div style="font-size: 13px; color: #d8d8d8; margin-bottom: 6px;">{{ proposal["tournament_name"] }}</div>
+                                <div style="font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">{{ proposal["team_name"] }}</div>
+                                <div style="display: flex; gap: 8px;">
+                                    <a href="/approve_proposal/{{ proposal['proposal_id'] }}" style="flex: 1; text-align: center; text-decoration: none;">
+                                        <input id="guest-button" type="button" value="Принять" style="width: 100%; background: lightgreen; border-color: white;">
+                                    </a>
+                                    <a href="/delete_proposal/{{ proposal['proposal_id'] }}" style="flex: 1; text-align: center; text-decoration: none;">
+                                        <input id="guest-button" type="button" value="Отклонить" style="width: 100%; background: orangered; border-color: white;">
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="padding: 20px; text-align: center; color: #d9d9d9;">Нет новых заявок.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

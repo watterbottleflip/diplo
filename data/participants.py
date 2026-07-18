@@ -1,3 +1,4 @@
+import datetime
 import sqlalchemy
 from flask_login import UserMixin
 from sqlalchemy_serializer import SerializerMixin
@@ -17,11 +18,28 @@ class Participant(SqlAlchemyBase, UserMixin, SerializerMixin):
     gto = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     contact = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
+    @staticmethod
+    def normalize_birth_date(birth_date):
+        if isinstance(birth_date, datetime.datetime):
+            return birth_date.date().strftime('%Y-%m-%d')
+        if isinstance(birth_date, datetime.date):
+            return birth_date.strftime('%Y-%m-%d')
+        if not birth_date:
+            return None
+        text = str(birth_date).strip()
+        if not text:
+            return None
+        try:
+            parsed = datetime.datetime.fromisoformat(text.replace('Z', '+00:00'))
+            return parsed.date().strftime('%Y-%m-%d')
+        except ValueError:
+            return text
+
     def make_new(self, username, fullname, gender, birth_date, gto, contact):
         self.username = username
         self.fullname = fullname
         self.gender = gender
-        self.birth_date = birth_date
+        self.birth_date = self.normalize_birth_date(birth_date)
         self.gto = gto
         self.contact = contact
 
@@ -29,6 +47,6 @@ class Participant(SqlAlchemyBase, UserMixin, SerializerMixin):
         self.username = username
         self.fullname = fullname
         self.gender = gender
-        self.birth_date = birth_date
+        self.birth_date = self.normalize_birth_date(birth_date)
         self.gto = gto
         self.contact = contact

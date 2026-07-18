@@ -36,15 +36,24 @@
 				<div id = "left-wrap-2" style = "display: block;">
 					<div id = "tournir-table" class = "block" style="background: rgba(0, 0, 0, 0.0); border-color: white;">
 						<h6 style="color: white; text-align:center; text-transform: uppercase; letter-spacing: 5px;">Турниры</h6>
-						<div id = "tournir-table-content">
+						<div id = "tournir-table-content" style="margin-bottom: 15px;">
 							{% if not is_empty %}
 								{% for tournament in tournaments %}
-									<a href = "/tournament/{{tournament['id']}}" style="text-decoration: none"><div style="color: white;">
+									<a href = "/tournament/{{tournament['id']}}" style="text-decoration: none"><div style="color: white; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.2);">
 										{{ tournament["name"] }}
-										<hr>
 									</div></a>
 								{% endfor %}
+							{% else %}
+								<div style="color: #d9d9d9; text-align: center; padding: 12px 0;">Турниров пока нет</div>
 							{% endif %}
+						</div>
+						<div style="background: rgba(255,255,255,0.10); padding: 12px; border-radius: 10px; color: white;">
+							<b>Как начать:</b>
+							<ul style="margin: 8px 0 0 18px; padding: 0;">
+								<li>Создайте турнир</li>
+								<li>Принимайте заявки</li>
+								<li>Постройте сетку на странице турнира</li>
+							</ul>
 						</div>
 					</div>
 					{% if current_user.is_authenticated %}

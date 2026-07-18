@@ -27,15 +27,29 @@ class Proposal(SqlAlchemyBase, UserMixin, SerializerMixin):
         self.status = False
 
     def approve_proposal(self):
-        self.status = True if (self.status == False) else False
+        self.status = True
 
     @property
     def participants_list(self):
-        return json.loads(self.participants)['participants']
+        if not self.participants:
+            return []
+        if isinstance(self.participants, list):
+            return self.participants
+        try:
+            payload = json.loads(self.participants)
+            if isinstance(payload, dict):
+                participants = payload.get('participants', [])
+                return participants if isinstance(participants, list) else []
+            if isinstance(payload, list):
+                return payload
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return []
+        return []
 
     def add_participant(self, participant_id):
         participant_list = self.participants_list
-        participant_list.append(participant_id)
+        if participant_id not in participant_list:
+            participant_list.append(participant_id)
         self.participants = json.dumps({'participants': participant_list})
 
     def delete_participant(self, participant_id):

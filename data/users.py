@@ -47,7 +47,20 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
 
     @property
     def proposals_list(self):
-        return json.loads(self.proposals)['proposals']
+        if not self.proposals:
+            return []
+        if isinstance(self.proposals, list):
+            return self.proposals
+        try:
+            payload = json.loads(self.proposals)
+            if isinstance(payload, dict):
+                proposals = payload.get('proposals', [])
+                return proposals if isinstance(proposals, list) else []
+            if isinstance(payload, list):
+                return payload
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return []
+        return []
 
     def add_proposal(self, proposal_id):
         proposal_list = self.proposals_list
@@ -63,7 +76,20 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
 
     @property
     def tournaments_list(self):
-        return json.loads(self.tournaments)['tournaments']
+        if not self.tournaments:
+            return []
+        if isinstance(self.tournaments, list):
+            return self.tournaments
+        try:
+            payload = json.loads(self.tournaments)
+            if isinstance(payload, dict):
+                tournaments = payload.get('tournaments', [])
+                return tournaments if isinstance(tournaments, list) else []
+            if isinstance(payload, list):
+                return payload
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return []
+        return []
 
     def add_tournament(self, tournament_id):
         tournaments_list = self.tournaments_list

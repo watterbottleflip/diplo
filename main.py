@@ -2,7 +2,6 @@ import json
 import os
 from flask import Flask, render_template, redirect, abort, flash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from flask import Flask, render_template
 import pandas as pd
 
 from data.db_session import create_session
@@ -11,9 +10,7 @@ from data.proposals import Proposal
 from data.participants import Participant
 from data.tournaments import Tournament
 from data import db_session
-from utils import get_proposal, get_tournament
 from email_sender import send_email
-# from email_sender import send_email
 from forms.loginform import LoginForm, RegistrationForm
 from forms.addtournamentform import AddTournamentForm
 from forms.addproposalform import AddProposalForm
@@ -32,26 +29,50 @@ def load_user(user_id):
     return db_sess.query(User).get(user_id)
 
 
-def get_proposal(proposal_id):
-    db_sess = db_session.create_session()
-    curr_proposal = db_sess.query(Proposal).filter(Proposal.id == proposal_id).first()
-    return curr_proposal
+def get_proposal(proposal_id, db_sess=None):
+    if db_sess is None:
+        db_sess = db_session.create_session()
+    return db_sess.query(Proposal).get(proposal_id)
 
 
-def get_tournament(tournament_id):
-    db_sess = db_session.create_session()
-    curr_tournament = db_sess.query(Tournament).filter(Tournament.id == tournament_id).first()
-    return curr_tournament
+def get_tournament(tournament_id, db_sess=None):
+    if db_sess is None:
+        db_sess = db_session.create_session()
+    return db_sess.query(Tournament).get(tournament_id)
 
 
-def get_participant(participant_id):
-    db_sess = db_session.create_session()
-    curr_participant = db_sess.query(Participant).filter(Participant.id == participant_id).first()
-    return curr_participant
+def get_participant(participant_id, db_sess=None):
+    if db_sess is None:
+        db_sess = db_session.create_session()
+    return db_sess.query(Participant).get(participant_id)
 
 
 def export_tournament_data(tournament_id):
     pass
+
+
+def build_bracket_participants(tournament_id, db_sess=None):
+    if db_sess is None:
+        db_sess = db_session.create_session()
+
+    tournament = db_sess.query(Tournament).get(tournament_id)
+    if not tournament:
+        return []
+
+    approved_proposals = db_sess.query(Proposal).filter(
+        Proposal.tournament_id == tournament_id,
+        Proposal.status.is_(True)
+    ).all()
+
+    participants = []
+    for proposal in approved_proposals:
+        team_name = proposal.team_name
+        participants.append(team_name)
+
+    if len(participants) < 2:
+        return participants
+
+    return participants
 
 
 @app.errorhandler(404)
@@ -122,6 +143,97 @@ def logout():
 @app.route('/account', methods=["POST", "GET"])
 @login_required
 def account():
+    db_sess = db_session.create_session()
+    if current_user.access_level == 0:
+        my_proposals_ids = current_user.proposals_list
+        my_proposals = []
+        for proposal_id in my_proposals_ids:
+            current_proposal = db_sess.query(Proposal).filter(Proposal.id == proposal_id).first()
+            if not current_proposal:
+                continue
+            tournament = db_sess.query(Tournament).filter(Tournament.id == current_proposal.tournament_id).first()
+            participants = []
+            for participant_id in current_proposal.participants_list:
+                participant = get_participant(participant_id)
+                if participant:
+                    participants.append(participant.username)
+            proposal = {
+                "tournament_name": tournament.name if tournament else "Турнир удалён",
+                "team": participants,
+                "status": current_proposal.status
+            }
+            my_proposals.append(proposal)
+
+        tournaments = []
+        for tournament in db_sess.query(Tournament).all():
+            tournaments.append({
+                "name": tournament.name,
+                "id": tournament.id
+            })
+        return render_template('index-leader.html',
+                               proposals=my_proposals,
+                               is_empty=len(my_proposals) == 0,
+                               tournaments=tournaments,
+                               is_empty_tournaments=len(tournaments) == 0)
+    else:
+        my_tournaments_ids = current_user.tournaments_list
+        my_tournaments = []
+        my_proposals = []
+        not_confirmed_proposals = []
+        for tournament_id in my_tournaments_ids:
+            current_tournament = db_sess.query(Tournament).filter(Tournament.id == tournament_id).first()
+            if not current_tournament:
+                continue
+            current_tournament.update_status()
+            proposal_amount = db_sess.query(Proposal).filter(
+                Proposal.tournament_id == tournament_id,
+                Proposal.status.is_(True)
+            ).count()
+            for proposal in db_sess.query(Proposal).filter(Proposal.tournament_id == tournament_id).all():
+                if not proposal.status:
+                    not_confirmed_proposals.append(proposal.id)
+            tournament = {
+                "tournament_name": current_tournament.name,
+                "proposals_amount": proposal_amount,
+                "proposals_need": current_tournament.teams_amount,
+                "tournament_status": deadlines[current_tournament.status],
+                "date": current_tournament.get_start_date
+            }
+            my_tournaments.append(tournament)
+        for proposal_id in not_confirmed_proposals:
+            current_proposal = get_proposal(proposal_id)
+            if not current_proposal:
+                continue
+            current_tournament = get_tournament(current_proposal.tournament_id)
+            proposal = {
+                "proposal_id": current_proposal.id,
+                "team_name": current_proposal.team_name,
+                "tournament_name": current_tournament.name if current_tournament else "Турнир удалён"
+            }
+            my_proposals.append(proposal)
+        return render_template('index-judge.html',
+                               tournaments=my_tournaments,
+                               proposals=my_proposals,
+                               is_empty_tournamnets=len(my_tournaments) == 0,
+                               is_empty_proposals=len(my_proposals) == 0)
+
+
+@app.route('/tournament/<int:tournament_id>/manage')
+@login_required
+def tournament_manage(tournament_id):
+    if current_user.access_level == 0:
+        abort(403)
+
+    db_sess = db_session.create_session()
+    tournament = db_sess.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not tournament:
+        abort(404)
+
+    proposals = db_sess.query(Proposal).filter(Proposal.tournament_id == tournament_id).all()
+    approved = [p for p in proposals if p.status]
+    pending = [p for p in proposals if not p.status]
+
+    return render_template('tournament_manage.html', tournament=tournament, proposals=proposals, approved=approved, pending=pending)
     if current_user.access_level == 0:
         db_sess = db_session.create_session()
         my_proposals_ids = current_user.proposals_list
@@ -161,7 +273,9 @@ def account():
             current_tournament = db_sess.query(Tournament).filter(Tournament.id == tournament_id).first()
             current_tournament.update_status()
             proposal_amount = db_sess.query(Proposal).filter(
-                Proposal.tournament_id == tournament_id and Proposal.status).count()
+                Proposal.tournament_id == tournament_id,
+                Proposal.status.is_(True)
+            ).count()
             for proposal in db_sess.query(Proposal).filter(Proposal.tournament_id == tournament_id).all():
                 if not proposal.status:
                     not_confirmed_proposals.append(proposal.id)
@@ -251,7 +365,7 @@ def add_proposal(tournament_id):
 
             for participant_id in participants_ids:
                 proposal.add_participant(participant_id)
-                db_sess.commit()
+            db_sess.commit()
 
             return redirect('/account')
 
@@ -287,12 +401,13 @@ def edit_proposal(proposal_id):
         tournament = get_tournament(proposal.tournament_id)
         if form.validate_on_submit():
             db_sess = db_session.create_session()
-            for i in range(tournament.participants_amount):
+            for i in range(min(tournament.participants_amount or 0, len(data["id"]))):
                 participant = get_participant(data["id"][i])
-                participant.update(username=form.username[i].data,
-                                   fullname=form.fullname[i].data, gender=form.gender[i].data,
-                                   birth_date=form.birth_date[i].data, gto=form.gto[i].data,
-                                   contact=form.contact[i].data)
+                if participant:
+                    participant.update(username=form.username[i].data,
+                                       fullname=form.fullname[i].data, gender=form.gender[i].data,
+                                       birth_date=form.birth_date[i].data, gto=form.gto[i].data,
+                                       contact=form.contact[i].data)
             db_sess.commit()
     else:
         abort(404)
@@ -308,22 +423,11 @@ def delete_proposal(proposal_id):
 
     if proposal:
         try:
-            participants_ids = proposal.participants
-            print(f"Тип participants_ids: {type(participants_ids)}")
-            print(f"Значение participants_ids: {participants_ids}")
-
-            # Ensure participants_ids is a list or iterable of integers
-            if not isinstance(participants_ids, list):
-                raise ValueError("participants_ids should be a list")
+            participants_ids = proposal.participants_list
             for participant_id in participants_ids:
-                if not isinstance(participants_ids, int):
-                    raise ValueError(f"participant_id {participant_id} is not an integer")
-
                 participant = get_participant(participant_id)
                 if participant:
                     db_sess.delete(participant)
-                else:
-                    print(f"Участник с id {participant_id} не найден")
 
             user = db_sess.query(User).filter(User.id == proposal.team_id).first()
             if user:
@@ -342,22 +446,6 @@ def delete_proposal(proposal_id):
         abort(404)
 
     return redirect('/account')
-
-
-# Предполагая, что функции get_proposal и get_participant определены где-то в вашем коде
-
-def get_proposal(proposal_id):
-    # Пример функции для получения предложения
-    db_sess = create_session()
-    proposal = db_sess.query(Proposal).filter(Proposal.id == proposal_id).first()
-    return proposal
-
-
-def get_participant(participant_id):
-    # Пример функции для получения участника
-    db_sess = create_session()
-    participant = db_sess.query(Participant).filter(Participant.id == participant_id).first()
-    return participant
 
 
 @app.route('/add_tournament', methods=["POST", "GET"])
@@ -415,7 +503,7 @@ def delete_tournament(tournament_id):
     tournament = db_sess.query(Tournament).filter(Tournament.id == tournament_id).first()
     if tournament:
         db_sess.delete(tournament)
-        if tournament_id in current_user.tournament_list():
+        if hasattr(current_user, "tournaments_list") and tournament_id in current_user.tournaments_list:
             current_user.delete_tournament(tournament_id)
         for proposal in db_sess.query(Proposal).filter(Proposal.tournament_id == tournament_id).all():
             for participant_id in proposal.participants_list:
@@ -435,18 +523,63 @@ def tournament_page(tournament_id):
     current_tournament = get_tournament(tournament_id)
     if not current_tournament:
         abort(404)
-    else:
-        tournament = {
-            "name" : current_tournament.name,
-            "discipline" : current_tournament.discipline,
-            "place" : current_tournament.place,
-            "organizer" : current_tournament.organizer,
-            "registration" : json.loads(current_tournament.deadlines)["deadlines"]["registration"],
-            "start" : json.loads(current_tournament.deadlines)["deadlines"]["start"],
-            "end" : json.loads(current_tournament.deadlines)["deadlines"]["end"],
-            "close" : json.loads(current_tournament.deadlines)["deadlines"]["close"]
-        }
-    return render_template("tournament.html", tournament = tournament)
+
+    deadlines_data = {}
+    if current_tournament.deadlines:
+        try:
+            deadlines_data = json.loads(current_tournament.deadlines or '{"deadlines":{}}').get('deadlines', {})
+        except (TypeError, ValueError, json.JSONDecodeError):
+            deadlines_data = {}
+
+    grid_data = []
+    if current_tournament.grid:
+        try:
+            grid_data = json.loads(current_tournament.grid or '{"grid": []}').get('grid', [])
+        except (TypeError, ValueError, json.JSONDecodeError):
+            grid_data = []
+
+    tournament = {
+        "name": current_tournament.name or "Турнир",
+        "discipline": current_tournament.discipline or "—",
+        "place": current_tournament.place or "—",
+        "organizer": current_tournament.organizer or "—",
+        "registration": deadlines_data.get("registration", ""),
+        "start": deadlines_data.get("start", ""),
+        "end": deadlines_data.get("end", ""),
+        "close": deadlines_data.get("close", ""),
+        "registration_time": deadlines_data.get("registration", ""),
+        "start_time": deadlines_data.get("start", ""),
+        "end_time": deadlines_data.get("end", ""),
+        "closure_time": deadlines_data.get("close", ""),
+        "grid": grid_data,
+        "id": current_tournament.id,
+        "teams_amount": current_tournament.teams_amount,
+        "participants_amount": current_tournament.participants_amount,
+    }
+
+    return render_template("tournament.html", tournament=tournament, current_user=current_user)
+
+
+@app.route('/tournament/<int:tournament_id>/generate_grid', methods=['POST'])
+@login_required
+def generate_grid(tournament_id):
+    if current_user.access_level == 0:
+        abort(403)
+
+    db_sess = db_session.create_session()
+    tournament = db_sess.query(Tournament).get(tournament_id)
+    if not tournament:
+        abort(404)
+
+    participants = build_bracket_participants(tournament_id, db_sess)
+    if len(participants) < 2:
+        flash("Недостаточно подтверждённых заявок для построения сетки", "error")
+        return redirect(f'/tournament/{tournament_id}')
+
+    tournament.build_grid(participants)
+    db_sess.commit()
+    flash("Турнирная сетка успешно построена", "success")
+    return redirect(f'/tournament/{tournament_id}')
 
 
 if __name__ == "__main__":

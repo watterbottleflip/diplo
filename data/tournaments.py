@@ -39,6 +39,40 @@ class Tournament(SqlAlchemyBase, UserMixin, SerializerMixin):
     def add_results(self, results):
         self.results = results
 
+    def build_grid(self, participants):
+        if not participants:
+            return []
+
+        normalized = []
+        for participant in participants:
+            if isinstance(participant, dict):
+                normalized.append(participant)
+            else:
+                normalized.append({"name": participant, "winner": None})
+
+        if len(normalized) % 2 != 0:
+            normalized.append({"name": "BYE", "winner": None})
+
+        rounds = []
+        current_round = list(normalized)
+        while len(current_round) > 1:
+            next_round = []
+            for i in range(0, len(current_round), 2):
+                left = current_round[i]
+                right = current_round[i + 1] if i + 1 < len(current_round) else None
+                next_round.append({
+                    "left": left.get("name") if isinstance(left, dict) else left,
+                    "right": right.get("name") if isinstance(right, dict) else right,
+                    "winner": None,
+                })
+            rounds.append(next_round)
+            current_round = [
+                {"name": match.get("left") if match.get("winner") is None else match.get("winner"), "winner": None}
+                for match in next_round
+            ]
+        self.grid = json.dumps({"grid": rounds})
+        return rounds
+
     @property
     def get_start_date(self):
         date = json.loads(self.deadlines)["deadlines"]["start"]

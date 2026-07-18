@@ -2,48 +2,102 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Название турнира</title>
+    <title>{{ tournament.name }}</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/index_style.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body style="background-image: linear-gradient(to right, black 3%, darkslateblue);">
-    <div id="wrapper" style="color: whitesmoke; text-align: right;">
-        <h1 style="text-align: center; color: ghostwhite;">{{ tournament.name }}</h1><br>
-        <div style="border-width: 1px; border-color: white; border-style: dashed; width: 25%; height:220px; border-radius: 20px; margin: auto;">
-            <div style="width: 100%; padding: 3%;">
-                <div style="width:50%; float:left; text-align: left;"><b>игра:</b></div>
-                <div style="width:50%; float:left;">{{ tournament.discipline }}</div>
+<body>
+    <div id="wrapper" style="max-width: 1200px; padding-bottom: 40px;">
+        <div class="block" style="padding: 24px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <h2 style="margin: 0;">{{ tournament.name }}</h2>
+                    <p style="margin: 8px 0 0; color: #cbd5e1;">Подробности турнира, заявок и сетки в одном месте.</p>
+                </div>
+                <a href="/" class="submit-button" style="display: inline-block; text-decoration: none; width: auto; padding: 10px 18px;">На главную</a>
             </div>
-            <div style="width: 100%; padding: 3%;">
-                <div style="width:50%; float:left; text-align: left;"><b>место проведения:</b></div>
-                <div style="width:50%; float:left;">{{ tournament.place }}</div>
-            </div>
-            <div style="width: 100%; padding: 3%;">
-                <div style="width:50%; float:left; text-align: left;"><b>организатор:</b></div>
-                <div style="width:50%; float:left;">{{ tournament.organizer }}</div>
-            </div>
-            <div style="width: 100%; padding: 3%;">
-                <div style="width:50%; float:left; text-align: left;"><b>открытие:</b></div>
-                <div style="width:50%; float:left;">{{ tournament.registration_time }}</div>
-            </div>
-            <div style="width: 100%; padding: 3%;">
-                <div style="width:50%; float:left; text-align: left;"><b>начало:</b></div>
-                <div style="width:50%; float:left;">{{ tournament.start_time }}</div>
-            </div>
-            <div style="width: 100%; padding: 3%;">
-                <div style="width:50%; float:left; text-align: left;"><b>конец:</b></div>
-                <div style="width:50%; float:left;">{{ tournament.end_time }}</div>
-            </div>
-            <div style="width: 100%; padding: 3%;">
-                <div style="width:50%; float:left; text-align: left;"><b>закрытие:</b></div>
-                <div style="width:50%; float:left;">{{ tournament.closure_time }}</div>
-            </div>
-             {% if current_user == tournament.judge %}
-                <a href = "/delete_tournament"><input id = "guest-button" type="button" name="answer" value="Провести турнир" style="background: darkslateblue; border-color: white;"></a>
-            {% endif %}
-            <a href="/"><input id="guest-button" type="button" name="answer" value="Назад"></a>
         </div>
-        <div style="text-align: center; margin-top: 5%;"><img src="{{ url_for('static', filename='1.gif') }}" width="10%"></div>
+
+        <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; align-items: start;">
+            <div class="block" style="padding: 20px;">
+                <h4 style="margin-top: 0;">Основная информация</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12);"><b>Дисциплина</b><br>{{ tournament.discipline }}</div>
+                    <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12);"><b>Место</b><br>{{ tournament.place }}</div>
+                    <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12);"><b>Организатор</b><br>{{ tournament.organizer }}</div>
+                    <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12);"><b>Команды</b><br>{{ tournament.teams_amount or '—' }}</div>
+                    <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12);"><b>Участников</b><br>{{ tournament.participants_amount or '—' }}</div>
+                    <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12);"><b>Регистрация</b><br>{{ tournament.registration_time }}</div>
+                    <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12);"><b>Начало</b><br>{{ tournament.start_time }}</div>
+                    <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12);"><b>Окончание</b><br>{{ tournament.end_time }}</div>
+                    <div style="padding: 10px 0;"><b>Закрытие</b><br>{{ tournament.closure_time }}</div>
+                </div>
+            </div>
+
+            <div class="block" style="padding: 20px;">
+                <h4 style="margin-top: 0;">Действия</h4>
+                {% if current_user.is_authenticated and current_user.access_level == 0 %}
+                    <div style="background: rgba(255,255,255,0.10); border-radius: 10px; padding: 12px; margin-bottom: 12px; color: #e2e8f0;">
+                        Готовы принять участие? Подайте заявку на этот турнир.
+                    </div>
+                    <a href="/add_proposal/{{ tournament.id }}" class="submit-button" style="display: inline-block; text-decoration: none; text-align: center;">Подать заявку</a>
+                {% elif current_user.is_authenticated and current_user.access_level == 1 %}
+                    <div style="background: rgba(255,255,255,0.10); border-radius: 10px; padding: 12px; margin-bottom: 12px; color: #e2e8f0;">
+                        Организатор может подтверждать заявки и строить сетку.
+                    </div>
+                    <a href="/tournament/{{ tournament.id }}/manage" class="submit-button" style="display: inline-block; text-decoration: none; text-align: center; margin-bottom: 10px; width: 100%;">Открыть панель управления</a>
+                    <form action="/tournament/{{ tournament.id }}/generate_grid" method="post">
+                        <button type="submit" class="submit-button" style="width: 100%;">Построить сетку</button>
+                    </form>
+                {% else %}
+                    <div style="background: rgba(255,255,255,0.10); border-radius: 10px; padding: 12px; color: #e2e8f0;">
+                        Войдите в систему, чтобы подать заявку или управлять турниром.
+                    </div>
+                    <a href="/login" class="submit-button" style="display: inline-block; text-decoration: none; text-align: center; margin-top: 12px; width: 100%;">Войти</a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div style="margin: 20px 0; text-align: center;">
+                    {% for category, message in messages %}
+                        <div style="color: {{ 'lightgreen' if category == 'success' else 'tomato' }}; margin-bottom: 8px;">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if tournament.grid %}
+            <div class="block" style="margin-top: 22px; padding: 20px;">
+                <h3 style="margin-top: 0; text-align: center;">Турнирная сетка</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; align-items: flex-start; margin-top: 16px;">
+                    {% for round_matches in tournament.grid %}
+                        <div style="min-width: 250px; flex: 1;">
+                            <div style="text-align: center; margin-bottom: 10px; color: #dfe7ff; font-weight: 700;">
+                                {% if loop.last %}
+                                    Финал
+                                {% else %}
+                                    Раунд {{ loop.index }}
+                                {% endif %}
+                            </div>
+                            {% for match in round_matches %}
+                                <div style="margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.16); border-radius: 12px; background: rgba(255,255,255,0.08); overflow: hidden;">
+                                    <div style="padding: 10px 12px; background: rgba(79,70,229,0.25); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #e0e7ff;">
+                                        Матч
+                                    </div>
+                                    <div style="padding: 10px 12px;">
+                                        <div style="padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: #f8fafc;">{{ match.left or '—' }}</div>
+                                        <div style="padding: 6px 0; color: #cbd5e1;">vs</div>
+                                        <div style="padding: 6px 0; color: #f8fafc;">{{ match.right or '—' }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
     </div>
 </body>
 </html>
